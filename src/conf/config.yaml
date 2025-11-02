@@ -1,0 +1,62 @@
+# Hydra configuration
+
+# Basic project setup
+project_name: "audio_emotion_recognition"
+seed: 42 # For reproducibility
+
+# Paths (relative to project root)
+data_dir: data
+experiments_dir: experiments
+models_dir: models
+
+# --- Placeholders for future configurations ---
+
+# Dataset configuration
+dataset:
+  name: ravdess
+  path: ${data_dir}/RAVDESS # Will be downloaded here
+  num_classes: 8 # e.g., neutral, calm, happy, sad, angry, fearful, disgust, surprised
+
+# Preprocessing/Feature extraction
+features:
+  sample_rate: 16000
+  win_length_ms: 25
+  hop_length_ms: 10
+  n_mels: 64
+  segment_duration_s: 1.5
+  hop_duration_s: 0.25
+
+# Model architecture (CRNN baseline)
+model:
+  name: crnn
+  conv_channels: [32, 64, 64]
+  gru_hidden_size: 128
+  attention_dim: 128
+
+# Training recipe
+training:
+  batch_size: 64
+  epochs: 80
+  optimizer:
+    name: AdamW
+    lr: 0.001
+  scheduler:
+    name: CosineAnnealingLR
+  clip_grad_norm: 1.0
+  loss_weights:
+    emotion: 1.0
+    valence: 0.5
+    arousal: 0.5
+  focal_loss:
+    alpha: -1
+    gamma: 2.0
+  spec_augment:
+    freq_mask_param: 24  # Max width of the frequency mask
+    time_mask_param: 50  # Max width of the time mask
+
+# Evaluation
+evaluation:
+  cv_method: group_shuffle_split # More descriptive
+  n_splits: 1
+  test_size: 0.2 # Fraction of speakers to use for validation
+  metrics: [uar, macro_f1]
