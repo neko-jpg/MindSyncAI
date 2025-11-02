@@ -1,4 +1,93 @@
-MindSync用 AIモデル要件定義（音声感情推定・オンデバイス推論）
+# 音声感情認識モデル開発ガイド
+
+このリポジトリは、音声データから感情を分類するTensorFlow Liteモデルを開発するためのものです。
+学習にはRAVDESSおよびCREMA-Dデータセットを使用します。
+
+## 成果物
+
+- `notebooks/training.ipynb`: データの前処理、モデルの学習、評価、TFLite変換までを行うJupyter Notebook。
+- `models/`: 学習済みモデル (`.h5`, `.tflite`) とラベルファイル (`labels.txt`) が格納されます。
+- `inference.py`: TFLiteモデルを使用して、単一の音声ファイルから感情を推論するスクリプト。
+- `requirements.txt`: 必要なPythonライブラリ。
+
+## 1. セットアップ
+
+### a. リポジトリのクローン
+```bash
+git clone <repository-url>
+cd <repository-name>
+```
+
+### b. 依存ライブラリのインストール
+```bash
+pip install -r requirements.txt
+```
+
+### c. データセットの準備
+1. [RAVDESS](https://zenodo.org/record/1188976) と [CREMA-D](https://github.com/CheyneyComputerScience/CREMA-D) の音声データセットをダウンロードします。
+2. ダウンロードしたデータセットを、プロジェクトルートの `data/` ディレクトリに配置します。
+   ディレクトリ構造の例:
+   ```
+   .
+   ├── data/
+   │   ├── RAVDESS/
+   │   │   ├── Actor_01/
+   │   │   │   └── 03-01-01-01-01-01-01.wav
+   │   │   └── ...
+   │   └── CREMA-D/
+   │       ├── 1001_DFA_ANG_XX.wav
+   │       └── ...
+   ├── models/
+   ├── notebooks/
+   └── ...
+   ```
+   **注意:** `training.ipynb` は `data/` ディレクトリ内を再帰的にスキャンするため、サブディレクトリの構造は上記と異なっていても問題ありません。
+
+## 2. モデルの学習と変換
+
+1. Jupyter Notebookを起動します。
+   ```bash
+   jupyter notebook
+   ```
+2. ブラウザで `notebooks/training.ipynb` を開きます。
+3. 「Cell」メニューから「Run All」を選択し、ノートブック全体を実行します。
+
+実行が完了すると、`models/` ディレクトリに以下のファイルが生成されます。
+- `emotion_model.h5`: 学習済みのKerasモデル
+- `emotion_model.tflite`: 量子化済みのTensorFlow Liteモデル
+- `labels.txt`: 感情ラベルのリスト
+
+## 3. 推論の実行
+
+`inference.py` スクリプトを使用して、単一の音声ファイル (`.wav`) の感情を推論できます。
+
+```bash
+python inference.py path/to/your/audio.wav
+```
+
+**実行例:**
+```
+$ python inference.py data/RAVDESS/Actor_01/03-01-03-01-01-01-01.wav
+
+'data/RAVDESS/Actor_01/03-01-03-01-01-01-01.wav' の感情を推論します...
+
+推論結果: happy (信頼度: 0.98)
+------------------------------
+各感情の確率:
+- angry: 0.001
+- calm: 0.003
+- disgust: 0.000
+- fearful: 0.002
+- happy: 0.981
+- neutral: 0.005
+- sad: 0.001
+- surprise: 0.007
+```
+
+---
+---
+
+# MindSync用 AIモデル要件定義（音声感情推定・オンデバイス推論）
 1. 目的・スコープ
 
 目的: 1日1回・最大60秒の音声から、気分スコア（0–1）と感情の色（カテゴリ）を出力し、履歴可視化・マッチング・ミニゲーム推薦に利用する。
