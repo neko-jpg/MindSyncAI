@@ -1,6 +1,0 @@
-tensorflow==2.14
-tensorflow-model-optimization
-librosa
-numpy
-scikit-learn
-matplotlib
