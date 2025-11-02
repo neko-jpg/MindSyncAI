@@ -16,13 +16,6 @@ dataset:
   name: ravdess
   path: ${data_dir}/RAVDESS # Will be downloaded here
   num_classes: 8 # e.g., neutral, calm, happy, sad, angry, fearful, disgust, surprised
-
-# Preprocessing/Feature extraction
-features:
-  sample_rate: 16000
-  win_length_ms: 25
-  hop_length_ms: 10
-  n_mels: 64
   segment_duration_s: 1.5
   hop_duration_s: 0.25
 
@@ -43,13 +36,6 @@ training:
   scheduler:
     name: CosineAnnealingLR
   clip_grad_norm: 1.0
-  loss_weights:
-    emotion: 1.0
-    valence: 0.5
-    arousal: 0.5
-  focal_loss:
-    alpha: -1
-    gamma: 2.0
   spec_augment:
     freq_mask_param: 24  # Max width of the frequency mask
     time_mask_param: 50  # Max width of the time mask

@@ -52,12 +52,10 @@ class CRNNModel(nn.Module):
             num_layers=2, batch_first=True, bidirectional=True
         )
 
-        # --- Multi-Head Prediction Block ---
+        # --- Prediction Head ---
         shared_feature_dim = cfg.model.gru_hidden_size * 2
         self.attention = AttentionPooling(shared_feature_dim, cfg.model.attention_dim)
         self.emotion_classifier = nn.Linear(shared_feature_dim, cfg.dataset.num_classes)
-        self.valence_regressor = nn.Linear(shared_feature_dim, 1)
-        self.arousal_regressor = nn.Linear(shared_feature_dim, 1)
 
     def forward(self, x):
         # x shape: (batch, n_mels, time)
@@ -76,14 +74,8 @@ class CRNNModel(nn.Module):
         shared_features = self.attention(x)
 
         emotion_logits = self.emotion_classifier(shared_features)
-        valence = torch.tanh(self.valence_regressor(shared_features).squeeze(-1))
-        arousal = torch.tanh(self.arousal_regressor(shared_features).squeeze(-1))
 
-        return {
-            'emotion': emotion_logits,
-            'valence': valence,
-            'arousal': arousal
-        }
+        return emotion_logits
 
 if __name__ == '__main__':
     from omegaconf import OmegaConf
@@ -114,5 +106,5 @@ if __name__ == '__main__':
     output_eval = model(dummy_input)
     print("Test in eval mode passed.")
 
-    assert output_train['emotion'].shape == output_eval['emotion'].shape
+    assert output_train.shape == output_eval.shape
     print("\nAll output shapes are correct.")

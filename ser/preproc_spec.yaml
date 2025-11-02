@@ -1,0 +1,11 @@
+# Preprocessing Specification for Speech Emotion Recognition
+
+# Audio parameters
+sample_rate: 16000 # Target sample rate for all audio files
+
+# Log-Mel Spectrogram parameters
+n_mels: 64 # Number of mel-frequency bins
+win_length_ms: 25 # Window length for STFT in milliseconds
+hop_length_ms: 10 # Hop length for STFT in milliseconds
+n_fft: 400 # Number of FFT points (25ms * 16000Hz)
+top_db: 80 # Maximum decibel level for log-mel spectrograms
