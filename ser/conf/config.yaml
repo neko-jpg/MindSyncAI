@@ -1,53 +1,106 @@
 # Hydra configuration
 
-# Basic project setup
 project_name: "audio_emotion_recognition"
-seed: 42 # For reproducibility
+seed: 42
 
 # Paths (relative to project root)
 data_dir: data
 experiments_dir: experiments
 models_dir: models
 
-# Feature extraction
 features:
   sample_rate: 16000
   n_mels: 64
 
-# --- Placeholders for future configurations ---
-
-# Dataset configuration
 dataset:
   name: ravdess
-  path: ${data_dir}/RAVDESS # Will be downloaded here
-  num_classes: 8 # e.g., neutral, calm, happy, sad, angry, fearful, disgust, surprised
+  path: ${data_dir}/RAVDESS
+  num_classes: 8
   segment_duration_s: 1.5
   hop_duration_s: 0.25
 
-# Model architecture (CRNN baseline)
 model:
-  name: crnn
-  conv_channels: [32, 64, 64]
-  gru_hidden_size: 128
-  attention_dim: 128
+  name: hybrid_ser            # hybrid_ser | mobile_crnn | wav2vec2_hybrid
+  cnn_channels: [32, 64, 128]
+  rnn_hidden_size: 160
+  rnn_layers: 2
+  attention_embed_dim: 128
+  attention_heads: 4
+  classifier_hidden: 256
+  dropout: 0.4
 
-# Training recipe
+pretrained:
+  model_name: "facebook/wav2vec2-base"
+  cache_dir: null
+  local_files_only: false
+  trust_remote_code: false
+  freeze_encoder: true
+  unfreeze_at_epoch: 10
+  attention_heads: 4
+  head_hidden_dim: 256
+  dropout: 0.2
+  gradient_checkpointing: false
+
 training:
   batch_size: 64
-  epochs: 80
+  epochs: 200
   optimizer:
-    name: AdamW
+    name: adamw
     lr: 0.001
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
   scheduler:
-    name: CosineAnnealingLR
-  clip_grad_norm: 1.0
+    name: cosine
+    t_max: ${training.epochs}
+    eta_min: 1.0e-5
+    warmup_epochs: 5
+  loss:
+    name: cross_entropy        # cross_entropy | focal
+    label_smoothing: 0.1
+    class_weights: balanced
+    focal_gamma: 2.0
+    focal_alpha: null
+  ema:
+    enabled: true
+    decay: 0.9995
   spec_augment:
-    freq_mask_param: 24  # Max width of the frequency mask
-    time_mask_param: 50  # Max width of the time mask
+    freq_mask_param: 24
+    time_mask_param: 50
+  feature_aug:
+    noise_std: 0.005
+    time_shift_pct: 0.05
+  mixup:
+    alpha: 0.4
+    prob: 0.6
+  specmix:
+    prob: 0.3
+    segments: 2
+    alpha: 0.3
+  gradient_clip: 1.0
+  early_stopping:
+    patience: 12
+    min_delta: 0.0005
+    monitor: uar
+  distillation:
+    enabled: false
+    teacher_checkpoint: ""
+    temperature: 4.0
+    alpha: 0.3
 
-# Evaluation
 evaluation:
-  cv_method: group_shuffle_split # More descriptive
-  n_splits: 1
-  test_size: 0.2 # Fraction of speakers to use for validation
+  test_size: 0.2
   metrics: [uar, macro_f1]
+  tta:
+    enabled: true
+    samples: 5
+    noise_std: 0.01
+    time_shift_pct: 0.03
+  calibration:
+    enabled: true
+  ensemble:
+    checkpoints: []
+  cv:
+    enabled: false
+    folds: 5
+    stratified: true
+    shuffle: true

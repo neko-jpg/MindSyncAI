@@ -51,14 +51,12 @@ class MobileCRNNv1(nn.Module):
         classifier_input_dim = (96 * 2) * 2 # (hidden_size * 2 for bidirectional) * 2 for (mean + max)
         self.classifier = nn.Linear(classifier_input_dim, num_classes)
 
-    def forward(self, x):
+    def forward(self, features, lengths=None, waveforms=None, **kwargs):
         # Input shape: (batch, n_mels, time)
-
-        # Add channel dimension
-        x = x.unsqueeze(1) # (batch, 1, n_mels, time)
+        x = features
 
         # Pass through convolutional block
-        x = self.conv_block(x) # (batch, 64, n_mels/4, time/4)
+        x = self.conv_block(x.unsqueeze(1)) # (batch, 64, n_mels/4, time/4)
 
         # Prepare for GRU: reshape and permute
         x = x.permute(0, 3, 1, 2) # (batch, time/4, 64, n_mels/4)
